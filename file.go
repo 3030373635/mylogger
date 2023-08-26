@@ -25,10 +25,10 @@ type LogMsg struct {
 	line      int
 }
 
-func NewFileLogger(levelStr, filePath, fileName string, maxFileSize int) *FileLogger {
+func NewFileLogger(levelStr, filePath, fileName string, maxFileSize int) (*FileLogger, error) {
 	level, err := parseLogLevel(levelStr)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	f1 := &FileLogger{
 		Level:       level,
@@ -39,15 +39,17 @@ func NewFileLogger(levelStr, filePath, fileName string, maxFileSize int) *FileLo
 	}
 	err = f1.initFile()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	// 开启5个协程从管道读取消息写日志(有问题。某个协程关闭了文件。其他协程正在读文件就会有问题)
+	// 问题1：开启5个协程从管道读取消息写日志(有问题。某个协程关闭了文件。其他协程正在读文件就会有问题)
 	// for i:=0;i<3;i++{
 	// 	go f1.writeLogBackGround()
 	// }
+
+	// 问题2：即使只开启一个协程, 如果主协程过早挂掉，会导致日志也挂掉，无法正常写入
 	go f1.writeLogBackGround()
 
-	return f1
+	return f1, nil
 }
 
 func (f *FileLogger) checkFile(fileObj *os.File) bool {

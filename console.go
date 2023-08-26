@@ -12,14 +12,15 @@ type ConsoleLogger struct {
 }
 
 // 构造函数
-func NewConsoleLog(levelStr string) ConsoleLogger {
+func NewConsoleLog(levelStr string) (ConsoleLogger, error) {
 
 	level, err := parseLogLevel(levelStr)
+	cl := ConsoleLogger{}
 	if err != nil {
-		panic(err)
-	}
-	return ConsoleLogger{
-		Level: level,
+		return cl, err
+	} else {
+		cl.Level = level
+		return cl, nil
 	}
 }
 
